@@ -1,6 +1,5 @@
 #!/usr/bin/python
 from __future__ import print_function
-
 import sys
 import os
 import re
@@ -8,21 +7,12 @@ import subprocess
 import tempfile
 import shutil
 
-
-
 PYTHON_VALIDATIONS = {
     "pep8": {
         "ignore_codes": ["E121", "E122", "E123", "E124", "E125", "E126", "E127", "E128", "E129", "E131"],
         "overrides": ["--max-line-length=120"]
     },
-    "pylint": {
-        "ignore_codes": [],
-        "overrides": []
-    }
 }
-
-
-
 
 def execute_system_command(*args, **kwargs):
     """
@@ -64,7 +54,7 @@ def validate_python_files(files):
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         with file(file_name, 'w') as f:
-            execute_system_command(   'git', 'show', ':' + name, stdout=f)
+            execute_system_command('git', 'show', ':' + name, stdout=f)
     for validator, values in PYTHON_VALIDATIONS.items():
         args = [validator]
         ignores = values.get('ignore_codes')
@@ -74,8 +64,10 @@ def validate_python_files(files):
         if overrides:
             args.extend(overrides)
             args.append('.')
-
-        output.append({validator: execute_system_command(*args, cwd=tempdir)})
+        result = execute_system_command(*args, cwd=tempdir)
+        print(result)
+        if result:
+            output.append({validator: result})
 
     shutil.rmtree(tempdir)
 
