@@ -1,0 +1,69 @@
+import sys
+import os
+import re
+import subprocess
+import tempfile
+import shutil
+
+PYTHON_VALIDATIONS = {
+    "pep8": {
+        "ignore_codes": ["E121", "E122", "E123", "E124", "E125", "E126", "E127", "E128", "E129", "E131"],
+        "overrides": ["--max-line-length=120"]
+    },
+    # "pylint": {
+    #     "ignore_codes": [],
+    #     "overrides": []
+    # }
+}
+
+def execute_system_command(*args, **kwargs):
+    """
+    executes a system command in a subprocess and returns the output.
+    sample return would be the result of git status or git diff
+    """
+    kwargs.setdefault('stdout', subprocess.PIPE)
+    proc = subprocess.Popen(args, **kwargs)
+    output, error = proc.communicate()
+    #TODO: handle error and / or display it
+
+    if error:
+        print error
+        sys.exit(1)
+
+    return output
+
+
+def main():
+    py_match = re.compile('^[AM]+\s+(?P<name>.*\.py)', re.MULTILINE)
+    files = execute_system_command('git', 'status', '--porcelain').decode("utf-8")
+    py_files = py_match.findall(files)
+
+    py_output = validate_python_files(py_files)
+    if py_output:
+        print py_output
+        sys.exit(1)
+
+
+def validate_python_files(files):
+    tempdir = tempfile.mkdtemp()
+    output = []
+    for name in files:
+        file_name = os.path.join(tempdir, name)
+        file_path = os.path.dirname(file_name)
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        with file(file_name, 'w') as f:
+            execute_system_command('git', 'show', ':' + name, stdout=f)
+    for validator, values in PYTHON_VALIDATIONS.items():
+        args = [validator]
+        ignores = values.get('ignore_codes')
+        overrides = values.get('overrides')
+        if ignores:
+            args.extend("--ignore", ",".join(ignores))
+        if overrides:
+            args.extend(overrides)
+        output.append({validator: execute_system_command(*args, cwd=tempdir)})
+
+    shutil.rmtree(tempdir)
+
+    return output
