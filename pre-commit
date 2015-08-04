@@ -64,7 +64,7 @@ def validate_python_files(files):
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         with file(file_name, 'w') as f:
-            execute_system_command('git', 'show', ':' + name, stdout=f)
+            execute_system_command( 'git', 'show', ':' + name, stdout=f)
     for validator, values in PYTHON_VALIDATIONS.items():
         args = [validator]
         ignores = values.get('ignore_codes')
