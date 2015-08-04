@@ -65,7 +65,7 @@ def validate_python_files(files):
             args.extend(overrides)
             args.append('.')
         result = execute_system_command(*args, cwd=tempdir)
-        print(result)
+
         if result:
             output.append({validator: result})
 
