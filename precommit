@@ -1,3 +1,5 @@
+#!/home/mircea/projects/architecture/githooks/ve/bin/python
+
 import sys
 import os
 import re
