@@ -1,5 +1,5 @@
-#!/home/mircea/projects/architecture/githooks/ve/bin/python
-
+#!/usr/bin/python
+from __future__ import print_function
 import sys
 import os
 import re
@@ -7,15 +7,17 @@ import subprocess
 import tempfile
 import shutil
 
+
+
 PYTHON_VALIDATIONS = {
     "pep8": {
         "ignore_codes": ["E121", "E122", "E123", "E124", "E125", "E126", "E127", "E128", "E129", "E131"],
         "overrides": ["--max-line-length=120"]
     },
-    # "pylint": {
-    #     "ignore_codes": [],
-    #     "overrides": []
-    # }
+    "pylint": {
+        "ignore_codes": [],
+        "overrides": []
+    }
 }
 
 def execute_system_command(*args, **kwargs):
@@ -26,10 +28,9 @@ def execute_system_command(*args, **kwargs):
     kwargs.setdefault('stdout', subprocess.PIPE)
     proc = subprocess.Popen(args, **kwargs)
     output, error = proc.communicate()
-    #TODO: handle error and / or display it
 
     if error:
-        print error
+        print(error)
         sys.exit(1)
 
     return output
@@ -42,7 +43,11 @@ def main():
 
     py_output = validate_python_files(py_files)
     if py_output:
-        print py_output
+        print('\033[91m')
+        print("PYTHON VALIDATION ERRORS. Fix your code and commit again")
+        print("Applied validators: %s" % ",".join(PYTHON_VALIDATIONS.keys()))
+        print(py_output)
+        print('\033[0m')
         sys.exit(1)
 
 
@@ -61,11 +66,16 @@ def validate_python_files(files):
         ignores = values.get('ignore_codes')
         overrides = values.get('overrides')
         if ignores:
-            args.extend("--ignore", ",".join(ignores))
+            args.extend(("--ignore", ",".join(ignores)))
         if overrides:
             args.extend(overrides)
+            args.append('.')
+
         output.append({validator: execute_system_command(*args, cwd=tempdir)})
 
     shutil.rmtree(tempdir)
 
     return output
+
+if __name__ == '__main__':
+    main()
